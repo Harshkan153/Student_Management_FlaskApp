@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %} Student Details {% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Student Details</h1>
+    
+    <!-- Bootstrap-styled table -->
+    <table class="table table-bordered table-striped">
+        <tr>
+            <th>Name</th>
+            <td>{{ student.name }}</td>
+        </tr>
+        <tr>
+            <th>Age</th>
+            <td>{{ student.age }}</td>
+        </tr>
+        <tr>
+            <th>Address</th>
+            <td>{{ student.address }}</td>
+        </tr>
+        <tr>
+            <th>Class</th>
+            <td>{{ student.class_name }}</td>
+        </tr>
+    </table>
+
+    <!-- Button to go back to the student list -->
+    <div class="text-center">
+        <a href="{{ url_for('students.index') }}" class="btn btn-primary">Back to Student List</a>
+    </div>
+</div>
+{% endblock %}

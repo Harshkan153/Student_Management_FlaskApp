@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %} Student Management {% endblock %}
+
+{% block content %}
+  
+
+<!-- Dropdown form for selecting the class -->
+<form method="GET" action="{{ url_for('students.index') }}" class="class-select-form">
+    <label for="class">Select Class:</label>
+    <select name="class" onchange="this.form.submit()">
+        <option value="">All</option> 
+        {% for i in range(1, 6) %}
+            <option value="{{ i }}" {% if class_name == i|string %}selected{% endif %}>Std {{ i }}</option>
+        {% endfor %}
+    </select>
+</form>
+
+<form method="GET" action="" class="export-form">
+    <label for="export">Export Data As:</label>
+    <select name="export" onchange="window.location.href=this.value;">
+        <option value="">Select Format</option>
+        <option value="{{ url_for('students.export_json') }}" {% if request.args.get('export') == 'json' %}selected{% endif %}>JSON</option>
+        <option value="{{ url_for('students.export_spreadsheet') }}" {% if request.args.get('export') == 'spreadsheet' %}selected{% endif %}>Spreadsheet (CSV)</option>
+        <option value="{{ url_for('students.export_pdf') }}" {% if request.args.get('export') == 'pdf' %}selected{% endif %}>PDF</option>
+    </select>
+</form>
+
+
+<!-- Button to add a new student -->
+<a href="{{ url_for('students.create') }}" class="add-btn">Add New Student</a>
+
+<!-- Table to display student details -->
+<table class="students-table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Class</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for student in students %}
+        <tr>
+            <td>{{ student.name }}</td>
+            <td>{{ student.age }}</td>
+            <td>{{ student.class_name }}</td>
+            <td>
+                <a href="{{ url_for('students.update_student', s_id=student.s_id) }}" class="btn btn-primary">Edit</a>
+                <a href="{{ url_for('students.delete_student', s_id=student.s_id) }}" class="btn btn-danger">Delete</a>
+                <a href="{{ url_for('students.view_student', s_id=student.s_id) }}" class="btn btn-success">Details</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<a href="{{ url_for('students.students_count') }}" class="add-btn">CHART</a>
+
+
+
+<script>
+    // This will refresh the page after a few seconds (e.g., after the file download)
+    setTimeout(function() {
+        location.reload();  // Reload the current page
+    }, 6000);  // Delay in milliseconds (6 seconds)
+</script>
+
+{% endblock %}

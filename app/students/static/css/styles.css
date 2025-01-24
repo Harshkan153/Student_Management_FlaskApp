@@ -1,0 +1,154 @@
+/* General page styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7f9;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+/* Form and dropdown styling */
+.class-select-form {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.class-select-form label {
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+.class-select-form select {
+    font-size: 16px;
+    padding: 5px;
+    margin: 0 10px;
+}
+
+.add-btn {
+    display: inline-block;
+    background-color: #28a745;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    font-size: 16px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.add-btn:hover {
+    background-color: #218838;
+}
+
+/* Table styling */
+.students-table {
+    width: 100%;
+    margin: 20px 0;
+    border-collapse: collapse;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.students-table th, .students-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.students-table th {
+    background-color: #343a40;
+    color: white;
+}
+
+.students-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+
+
+/* add form css */
+
+form {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Input field styling */
+form input[type="text"],
+form input[type="number"],
+form input[type="submit"] {
+    width: 95%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    
+}
+
+form input[type="submit"] {
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+form input[type="submit"]:hover {
+    background-color: #218838;
+}
+
+/* Placeholder styling */
+form input::placeholder {
+    color: #aaa;
+}
+
+/* Focus styling for inputs */
+form input:focus {
+    outline: none;
+    border-color: #28a745;
+}
+
+/* Error or invalid styling (optional) */
+form input:invalid {
+    border-color: #dc3545;
+}
+
+
+/* update html page */
+
+.flex{
+    display: flex;
+    justify-content: center;
+}
+
+
+
+.export-form {
+        position: absolute;
+        top: 10px;       /* Adjust the distance from the top */
+        right: 10px;     /* Adjust the distance from the right */
+        z-index: 10;     /* Ensure it stays on top of other content */
+    }
+
+
+
+ 
