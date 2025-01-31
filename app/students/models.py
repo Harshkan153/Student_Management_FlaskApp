@@ -1,4 +1,7 @@
 from app.app import db
+from flask_login import UserMixin
+
+
 
 class Student(db.Model):
     __tablename__ = "students"
@@ -11,3 +14,23 @@ class Student(db.Model):
     
     def __repr__(self):
         return f"<student {self.name}>"
+    
+    
+class User(db.Model,UserMixin):
+    __tablename__ = "users"
+    uid = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80),nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    password = db.Column(db.String(120),nullable=False)
+    role = db.Column(db.String(20), nullable=False, default="teacher") 
+    
+       
+    
+    def get_id(self):
+        return str(self.uid)
+    
+    def is_admin(self):
+        return self.role == "admin"
+
+    def is_teacher(self):
+        return self.role == "teacher"

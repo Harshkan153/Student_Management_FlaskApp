@@ -26,45 +26,61 @@
 </form>
 
 
-<!-- Button to add a new student -->
-<a href="{{ url_for('students.create') }}" class="add-btn">Add New Student</a>
-
-<!-- Table to display student details -->
-<table class="students-table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Age</th>
-            <th>Class</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for student in students %}
-        <tr>
-            <td>{{ student.name }}</td>
-            <td>{{ student.age }}</td>
-            <td>{{ student.class_name }}</td>
-            <td>
-                <a href="{{ url_for('students.update_student', s_id=student.s_id) }}" class="btn btn-primary">Edit</a>
-                <a href="{{ url_for('students.delete_student', s_id=student.s_id) }}" class="btn btn-danger">Delete</a>
-                <a href="{{ url_for('students.view_student', s_id=student.s_id) }}" class="btn btn-success">Details</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{% if current_user.is_authenticated %}
+    {% if current_user.is_admin() or current_user.is_teacher() %}
+    <button onclick="window.location.href='{{ url_for('students.create') }}'">Add Student</button>
+    {% else %}
+    <p>You do not have permission to add students.</p>
+    {% endif %}
 
 
-<a href="{{ url_for('students.students_count') }}" class="add-btn">CHART</a>
+    <!-- Table to display student details -->
+    <table class="students-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Class</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <td>{{ student.name }}</td>
+                <td>{{ student.age }}</td>
+                <td>{{ student.class_name }}</td>
+                <td>
+                    {% if current_user.is_admin() %}
+                        <!-- Admin actions: Edit, Delete, View Details -->
+                        <a href="{{ url_for('students.update_student', s_id=student.s_id) }}" class="btn btn-primary">Edit</a>
+                        <a href="{{ url_for('students.delete_student', s_id=student.s_id) }}" class="btn btn-danger">Delete</a>
+                        <a href="{{ url_for('students.view_student', s_id=student.s_id) }}" class="btn btn-success">Details</a>
+                    {% endif %}
+                    {% if current_user.is_teacher() %}
+                        <!-- teacher actions: View Details -->
+                        <a href="{{ url_for('students.view_student', s_id=student.s_id) }}" class="btn btn-success">Details</a>
+                    {% endif %}
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Chart link -->
+    <a href="{{ url_for('students.students_count') }}" class="add-btn">CHART</a>
+
+    <div style="width: 50%; margin: auto;">
+        <!-- Insert the Plotly chart here -->
+        {{ chart_html | safe }}
+    </div>
+{% endif %}
 
 
 
-<script>
-    // This will refresh the page after a few seconds (e.g., after the file download)
-    setTimeout(function() {
-        location.reload();  // Reload the current page
-    }, 6000);  // Delay in milliseconds (6 seconds)
-</script>
+
+
+
 
 {% endblock %}

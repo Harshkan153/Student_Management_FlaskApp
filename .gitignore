@@ -7,11 +7,9 @@ __pycache__/
 venv/
 env/
 
-# Environment variables
-.env
 
-# Database files (if not shared)
-*.sqlite3
+
+
 
 # Logs
 *.log

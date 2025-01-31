@@ -10,9 +10,22 @@
     <title>{% block title %} Student Management {% endblock %}</title>
 </head>
 <body>
-    <header>
-        <h1>Student Management System</h1>
-    </header>
+
+    <h1 style="font-size: 3rem; font-weight: 900; font-family: 'Arial', sans-serif; color: black; text-shadow: 3px 3px 5px rgba(255, 255, 255, 0.7); text-align: center;">
+        Student Management System
+    </h1>
+    
+    {% if current_user.is_authenticated %}
+    <p>Welcome, {{ current_user.username }} ({{ current_user.role }})</p>
+    <a href="{{ url_for('students.index') }}">Home</a>
+
+        
+
+    <a href="{{ url_for('students.logout') }}">Logout</a>
+    {% else %}
+    <a href="{{ url_for('students.login') }}">Login</a>
+    {% endif %}
+    
     <div class="container">
         <!-- Modal for Flash Messages -->
         <div class="modal fade" id="flashModal" tabindex="-1" role="dialog" aria-labelledby="flashModalLabel" aria-hidden="true">

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+    
+<style>
+    /* Background Image Styling */
+    body {
+        background: url('https://img.freepik.com/free-vector/hand-drawn-back-school-background_23-2149464866.jpg') no-repeat center center fixed;
+        background-size: cover;
+        position: relative;
+    }
+
+
+</style>
+
+<div class="container d-flex justify-content-center align-items-center vh-100">
+    <div class="card p-5 shadow-lg rounded-4 border-0" style="max-width: 500px; width: 100%; background: #fff;">
+        <h1 class="text-center fw-bold text-primary">Login</h1>
+        <p class="text-center text-muted">Welcome back! Please login to your account.</p>
+        
+        <form method="POST" action="{{ url_for('students.login') }}">
+            <div class="mb-4">
+                <label for="username" class="form-label fw-semibold">Username:</label>
+                <input type="text" id="username" name="username" class="form-control p-3 rounded-3" placeholder="Enter your username" required>
+            </div>
+            <div class="mb-4">
+                <label for="password" class="form-label fw-semibold">Password:</label>
+                <input type="password" id="password" name="password" class="form-control p-3 rounded-3" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 p-3 rounded-3 fw-semibold">Login</button>
+        </form>
+
+        <p class="text-center mt-4 text-muted">
+            Don't have an account? <a href="{{ url_for('students.signup') }}" class="text-primary fw-semibold">Sign Up</a>
+        </p>
+    </div>
+</div>
+
+
+{% endblock %}

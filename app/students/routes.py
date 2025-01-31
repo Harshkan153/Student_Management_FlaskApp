@@ -1,20 +1,85 @@
-from io import BytesIO
+from flask import abort, flash, jsonify, make_response, request, render_template, redirect, url_for, Blueprint
 
+from io import BytesIO
 import pandas as pd
-from flask import flash, jsonify, make_response, request, render_template, redirect, url_for, Blueprint
 from fpdf import FPDF
 import plotly.graph_objects as go
 import plotly.io as pio
 
 from app.app import db
+from app.students.models import Student, User
 
-from app.students.models import Student
+
+from flask_login import current_user, login_user, logout_user, login_required
+from app.app import bcrypt
+
 
 students = Blueprint("students", __name__, template_folder="templates", static_folder="static")
 
 
 
-@students.route("/")
+
+
+@students.route("/signup", methods = ["GET","POST"])
+def signup():
+    if request.method=="GET":
+        return render_template("signup.html")
+    elif request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        email = request.form.get("email")
+        role = request.form.get("role", "teacher")  # Default role is "teacher"
+        
+          # Check if the email already exists
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            flash("Email already exists. Please use a different one or login.", "danger")
+            return redirect(url_for("students.signup"))
+            
+        hashed_password = bcrypt.generate_password_hash(password)
+            
+        user = User(username=username, password=hashed_password,email=email,role=role)
+            
+        db.session.add(user)
+        db.session.commit()
+        flash("Account created successfully! Please login.", "success")
+        return redirect(url_for("students.login"))
+    return render_template("signup.html")
+    
+    
+    
+@students.route("/login", methods=["GET","POST"])
+def login():
+        if request.method == "GET":
+            return render_template("login.html")
+        elif request.method == "POST":
+            username = request.form.get("username")
+            password = request.form.get("password")
+            
+            user = User.query.filter(User.username == username).first()
+            
+            if bcrypt.check_password_hash(user.password, password):
+                login_user(user)
+                flash("Login successful!", "success")
+                return redirect(url_for("students.index"))
+            else:
+                flash("invalid Credentials", "Login failed")
+                return redirect(url_for("students.login"))
+        return render_template("login.html")
+ 
+    
+    
+@students.route("/logout")
+def logout():
+    logout_user()
+    flash("You have been logged out.", "info")
+    return redirect(url_for("students.login"))
+
+
+
+
+@students.route("/index")
+@login_required
 def index():
     class_name = request.args.get("class")
     if class_name == "":  # Handle "All" option
@@ -35,30 +100,35 @@ def view_student(s_id):
 
 @students.route("/create", methods=["GET","POST"])
 def create():
-    if request.method == "GET":
-        return render_template("add_student.html")
-    elif request.method == "POST":
-        name = request.form.get("name")
-        age = int(request.form.get("age"))
-        address = request.form.get("address")
-        class_name = request.form.get("class_name")
+    if current_user.is_teacher() or current_user.is_admin():
+        # Allow both admin and teacher to add a student
+        if request.method == "GET":
+            return render_template("add_student.html")
+        elif request.method == "POST":
+            name = request.form.get("name")
+            age = int(request.form.get("age"))
+            address = request.form.get("address")
+            class_name = request.form.get("class_name")
 
-        # Check for duplicate student
-        existing_student = Student.query.filter_by(name=name, class_name=class_name).first()
-        if existing_student:
-            flash('Student already exists in this class.', 'error')
-        else:
-            new_student = Student(name=name, age=age, address=address, class_name=class_name)
-            db.session.add(new_student)
-            db.session.commit()
-            flash('Student added successfully!', 'success')
-        
-        return redirect(url_for("students.index"))
+            # Check for duplicate student
+            existing_student = Student.query.filter_by(name=name, class_name=class_name).first()
+            if existing_student:
+                flash('Student already exists in this class.', 'error')
+            else:
+                new_student = Student(name=name, age=age, address=address, class_name=class_name)
+                db.session.add(new_student)
+                db.session.commit()
+                flash('Student added successfully!', 'success')
+            
+            return redirect(url_for("students.index"))
     
     
     
 @students.route("/update/<int:s_id>", methods=["GET","POST"])
+@login_required
 def update_student(s_id):
+    if not current_user.is_admin():
+        abort(403)  # Only Admin can edit students
     student = Student.query.get_or_404(s_id)
     if request.method == "POST":
         student.name = request.form["name"]
@@ -72,7 +142,10 @@ def update_student(s_id):
 
 
 @students.route("/delete/<int:s_id>")
+@login_required
 def delete_student(s_id):
+    if not current_user.is_admin():
+        abort(403) 
     student = Student.query.get_or_404(s_id)
     db.session.delete(student)
     db.session.commit()
