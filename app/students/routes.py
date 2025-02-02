@@ -58,6 +58,12 @@ def login():
             
             user = User.query.filter(User.username == username).first()
             
+            if user is None:
+                flash("No user registered with this username.", "danger")
+                return redirect(url_for("students.login"))
+            
+            
+            
             if bcrypt.check_password_hash(user.password, password):
                 login_user(user)
                 flash("Login successful!", "success")

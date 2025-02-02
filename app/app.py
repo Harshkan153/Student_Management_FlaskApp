@@ -23,7 +23,6 @@ def create_app():
 
     
     from app.students.models import User
-    
     @login_manager.user_loader
     def load_user(uid):
         return User.query.get(uid)
@@ -31,9 +30,13 @@ def create_app():
 
     
     
-    
+    # students blueprint
     from app.students.routes import students
     app.register_blueprint(students, url_prefix='/students')
+    
+    #users blueprint
+    from app.users.routes import users_bp
+    app.register_blueprint(users_bp, url_prefix="/users")
     
     
     
