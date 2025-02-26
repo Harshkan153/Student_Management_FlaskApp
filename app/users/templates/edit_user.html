@@ -3,29 +3,63 @@
 {% block content %}
 <h2><center>Edit User</center></h2>
 
-<form action="{{ url_for('users.edit_user', user_id=user.uid) }}" method="POST" class="forms">
+<!-- Edit User Form -->
+<form id="edit-user-form" class="forms">
     <div class="form-group">
         <label for="username">Username:</label>
-        <input type="text" name="username" value="{{ user.username }}" required class="form-control">
+        <input type="text" id="username" name="username" value="{{ user.username }}" required class="form-control">
     </div>
 
     <!-- Email input -->
     <div class="form-group">
         <label for="email">Email:</label>
-        <input type="email" name="email" value="{{ user.email }}" required class="form-control">
+        <input type="email" id="email" name="email" value="{{ user.email }}" required class="form-control">
     </div>
 
     <!-- Role selection -->
     <div class="form-group">
         <label for="role">Role:</label>
-        <select name="role" class="form-control" required>
+        <select id="role" name="role" class="form-control" required>
             <option value="teacher" {% if user.role == "teacher" %}selected{% endif %}>Teacher</option>
             <option value="admin" {% if user.role == "admin" %}selected{% endif %}>Admin</option>
         </select>
     </div>
 
-    <!-- Submit button -->
+    <!-- Save Changes Button -->
     <button type="submit" class="btn btn-primary">Save Changes</button>
+    <a href="{{ url_for('users.get_users') }}" class="btn btn-secondary">Cancel</a>
 </form>
+
+<script>
+    document.getElementById("edit-user-form").addEventListener("submit", function (event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const userId = "{{ user.uid }}"; // Get user ID from Jinja
+        const formData = {
+            username: document.getElementById("username").value,
+            email: document.getElementById("email").value,
+            role: document.getElementById("role").value
+        };
+
+        fetch(`/users/update/${userId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert("User updated successfully!");
+                window.location.href = "{{ url_for('users.get_users') }}"; // Redirect to user list
+            } else {
+                alert("Error updating user: " + data.error);
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    });
+</script>
 
 {% endblock %}

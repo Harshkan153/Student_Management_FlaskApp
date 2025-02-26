@@ -1,19 +1,65 @@
 {% extends "base.html" %}
-{% block title %} Student Management {% endblock %}
-
 
 {% block content %}
+<h2 class="flex">Add Student</h2>
 
-    <h1>Create Student</h1>
-    <form action="{{url_for('students.create')}}" method = "POST" class="forms">
-        <input type = "text" name="name" placeholder="Name" required="required">
-        <input type = "number" name="age" placeholder="Age" required="required">
-        <input type = "text" name="address" placeholder="Address" required="required">
-        <input type = "text" name="class_name" placeholder="class_name" required="required">
-        <input type = "submit" value="Create">
+<form id="add-student-form">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required>
+    <br><br>
 
-    </form>
+    <label for="age">Age:</label>
+    <input type="number" id="age" name="age" required>
+    <br><br>
 
+    <label for="address">Address:</label>
+    <input type="text" id="address" name="address" required>
+    <br><br>
 
+    <label for="class_name">Class:</label>
+    <select id="class_name" name="class_name" required>
+        <option value="1">Std 1</option>
+        <option value="2">Std 2</option>
+        <option value="3">Std 3</option>
+        <option value="4">Std 4</option>
+        <option value="5">Std 5</option>
+    </select>
+    <br><br>
+
+    <button type="submit">Add Student</button>
+    <a href="{{ url_for('students.index') }}">Cancel</a>
+</form>
+
+<script>
+    document.getElementById("add-student-form").addEventListener("submit", function (event) {
+        event.preventDefault();  // Prevent default form submission
+
+        const formData = {
+            name: document.getElementById("name").value,
+            age: document.getElementById("age").value,
+            address: document.getElementById("address").value,
+            class_name: document.getElementById("class_name").value
+        };
+
+        fetch("/students/create", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert("Student added successfully!");
+                window.location.href = "{{ url_for('students.index') }}";  // Redirect to student list
+            } else {
+                alert("Error adding student: " + data.error);
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    });
+</script>
 
 {% endblock %}

@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 
-
 {% block content %}
-    
+
 <style>
     /* Background Image Styling */
     body {
@@ -10,19 +9,17 @@
         background-size: cover;
         position: relative;
     }
-
-
 </style>
 
 <div class="container d-flex justify-content-center align-items-center vh-100">
     <div class="card p-5 shadow-lg rounded-4 border-0" style="max-width: 500px; width: 100%; background: #fff;">
         <h1 class="text-center fw-bold text-primary">Login</h1>
         <p class="text-center text-muted">Welcome back! Please login to your account.</p>
-        
-        <form method="POST" action="{{ url_for('students.login') }}">
+
+        <form id="loginForm">
             <div class="mb-4">
                 <label for="username" class="form-label fw-semibold">Username:</label>
-                <input type="text" id="username" name="username" class="form-control p-3 rounded-3" placeholder="Enter your username" required>
+                <input type="text" id="username" name="username" class="form-control p-3 rounded-3" placeholder="Enter your email" required>
             </div>
             <div class="mb-4">
                 <label for="password" class="form-label fw-semibold">Password:</label>
@@ -31,11 +28,39 @@
             <button type="submit" class="btn btn-primary w-100 p-3 rounded-3 fw-semibold">Login</button>
         </form>
 
+        <p id="errorMessage" class="text-danger text-center mt-3" style="display: none;"></p>
+
         <p class="text-center mt-4 text-muted">
             Don't have an account? <a href="{{ url_for('students.signup') }}" class="text-primary fw-semibold">Sign Up</a>
         </p>
     </div>
 </div>
 
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        const response = await fetch("{{ url_for('students.login') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ username: username, password: password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert("Login successful!");
+            setTimeout(() => { window.location.href = "{{ url_for('students.index') }}"; }, 2000);
+        } else {
+            document.getElementById("errorMessage").textContent = data.message;
+            document.getElementById("errorMessage").style.display = "block";
+        }
+    });
+</script>
 
 {% endblock %}

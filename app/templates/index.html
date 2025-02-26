@@ -2,29 +2,32 @@
 {% block title %} Student Management {% endblock %}
 
 {% block content %}
-  
+
+
 
 <!-- Dropdown form for selecting the class -->
-<form method="GET" action="{{ url_for('students.index') }}" class="class-select-form">
+<form class="class-select-form">
     <label for="class">Select Class:</label>
-    <select name="class" onchange="this.form.submit()">
+    <select id="class-select" onchange="fetchStudentsByClass()">
         <option value="">All</option> 
-        {% for i in range(1, 6) %}
-            <option value="{{ i }}" {% if class_name == i|string %}selected{% endif %}>Std {{ i }}</option>
-        {% endfor %}
+        <option value="1">Std 1</option>
+        <option value="2">Std 2</option>
+        <option value="3">Std 3</option>
+        <option value="4">Std 4</option>
+        <option value="5">Std 5</option>
     </select>
 </form>
 
-<form method="GET" action="" class="export-form">
+<!-- Export Options -->
+<form class="export-form">
     <label for="export">Export Data As:</label>
     <select name="export" onchange="window.location.href=this.value;">
         <option value="">Select Format</option>
-        <option value="{{ url_for('students.export_json') }}" {% if request.args.get('export') == 'json' %}selected{% endif %}>JSON</option>
-        <option value="{{ url_for('students.export_spreadsheet') }}" {% if request.args.get('export') == 'spreadsheet' %}selected{% endif %}>Spreadsheet (CSV)</option>
-        <option value="{{ url_for('students.export_pdf') }}" {% if request.args.get('export') == 'pdf' %}selected{% endif %}>PDF</option>
+        <option value="{{ url_for('students.export_json') }}">JSON</option>
+        <option value="{{ url_for('students.export_spreadsheet') }}">Spreadsheet (CSV)</option>
+        <option value="{{ url_for('students.export_pdf') }}">PDF</option>
     </select>
 </form>
-
 
 {% if current_user.is_authenticated %}
     {% if current_user.is_admin() or current_user.is_teacher() %}
@@ -32,7 +35,6 @@
     {% else %}
     <p>You do not have permission to add students.</p>
     {% endif %}
-
 
     <!-- Table to display student details -->
     <table class="students-table">
@@ -44,23 +46,16 @@
                 <th>Actions</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="students-body">
             {% for student in students %}
             <tr>
                 <td>{{ student.name }}</td>
                 <td>{{ student.age }}</td>
                 <td>{{ student.class_name }}</td>
                 <td>
-                    {% if current_user.is_admin() %}
-                        <!-- Admin actions: Edit, Delete, View Details -->
-                        <a href="{{ url_for('students.update_student', s_id=student.s_id) }}" class="btn btn-primary">Edit</a>
-                        <a href="{{ url_for('students.delete_student', s_id=student.s_id) }}" class="btn btn-danger">Delete</a>
-                        <a href="{{ url_for('students.view_student', s_id=student.s_id) }}" class="btn btn-success">Details</a>
-                    {% endif %}
-                    {% if current_user.is_teacher() %}
-                        <!-- teacher actions: View Details -->
-                        <a href="{{ url_for('students.view_student', s_id=student.s_id) }}" class="btn btn-success">Details</a>
-                    {% endif %}
+                   
+                    <button class="btn btn-primary" onclick="editStudent({{ student.s_id }})">Edit</button>
+                    <button class="btn btn-danger" onclick="confirmDelete({{ student.s_id }})">Delete</button>
 
                 </td>
             </tr>
@@ -77,10 +72,98 @@
     </div>
 {% endif %}
 
+<!-- JavaScript to Fetch Data from REST API -->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        fetchStudents(); // Fetch students on page load
+    });
 
+    async function fetchStudents() {
+        try {
+            let response = await fetch("/students/students", { 
+                headers: { 
+                    "Accept": "application/json",
+                    "X-Requested-With": "XMLHttpRequest" // Ensure API response
+                }
+            });
 
+            if (!response.ok) throw new Error("Failed to fetch students");
 
+            let students = await response.json();
+            console.log(students);
+            renderStudents(students);
+        } catch (error) {
+            console.error("Error fetching students:", error);
+        }
+    }
 
+    async function fetchStudentsByClass() {
+        const selectedClass = document.getElementById("class-select").value;
+        let apiUrl = selectedClass ? `/students/students?class=${encodeURIComponent(selectedClass)}` : "/students";
 
+        try {
+            let response = await fetch(apiUrl, { 
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch students by class");
+
+            let students = await response.json();
+            renderStudents(students);
+        } catch (error) {
+            console.error("Error fetching students:", error);
+        }
+    }
+
+    function renderStudents(students) {
+        const tableBody = document.getElementById("students-body");
+        tableBody.innerHTML = ""; // Clear existing data
+
+        if (students.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No students found</td></tr>`;
+            return;
+        }
+
+        students.forEach(student => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${student.name}</td>
+                <td>${student.age}</td>
+                <td>${student.class_name}</td>
+                <td>
+                    
+                    <button class="btn btn-primary" onclick="updateStudent(${student.s_id})">Edit</button>
+                    <button class="btn btn-danger" onclick="confirmDelete(${student.s_id})">Delete</button>
+                </td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+    }
+
+    function updateStudent(studentId) {
+        window.location.href = `/students/update/${studentId}`; // Redirect to update page
+    }
+
+    async function deleteStudent(studentId) {
+        try {
+            let response = await fetch(`/students/students/${studentId}`, { method: "DELETE" });
+
+            if (!response.ok) throw new Error("Failed to delete student");
+
+            alert("Student deleted successfully!");
+            fetchStudents(); // Refresh the table
+        } catch (error) {
+            console.error("Error deleting student:", error);
+        }
+    }
+
+    function confirmDelete(studentId) {
+        if (confirm("Are you sure you want to delete this student?")) {
+            deleteStudent(studentId);
+        }
+    }
+</script>
 
 {% endblock %}

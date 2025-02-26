@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 
-
 {% block content %}
 
 <style>
@@ -10,16 +9,17 @@
         background-size: cover;
         position: relative;
     }
-
-
 </style>
 
 <div class="container d-flex justify-content-center align-items-center vh-100">
     <div class="card p-5 shadow-lg rounded-4 border-0" style="max-width: 500px; width: 100%; background: #fff;">
         <h1 class="text-center fw-bold text-primary">Sign Up</h1>
-        
-        
-        <form method="POST" action="{{ url_for('students.signup') }}">
+
+        <!-- Success/Error Message -->
+        <div id="message-box" class="alert d-none"></div>
+
+        <!-- Signup Form -->
+        <form id="signup-form">
             <div class="mb-4">
                 <label for="username" class="form-label fw-semibold">Username:</label>
                 <input type="text" id="username" name="username" class="form-control p-3 rounded-3" placeholder="Enter your username" required>
@@ -34,7 +34,8 @@
             </div>
             <div class="mb-4">
                 <label for="role" class="form-label fw-semibold">Role:</label>
-                <select name="role">
+                <select id="role" name="role" class="form-select p-3 rounded-3">
+
                     <option value="teacher">Teacher</option>
                     <option value="admin">Admin</option>
                 </select>
@@ -47,5 +48,49 @@
         </p>
     </div>
 </div>
+
+<!-- JavaScript for handling signup -->
+<script>
+    document.getElementById("signup-form").addEventListener("submit", async function(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        // Get form values
+        const username = document.getElementById("username").value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const role = document.getElementById("role").value;
+
+        const messageBox = document.getElementById("message-box");
+        messageBox.classList.add("d-none"); // Hide message box initially
+
+        try {
+            // Send signup request to backend
+            const response = await fetch("/students/signup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, email, password, role })
+            });
+
+            const data = await response.json(); // Parse JSON response
+
+            if (response.ok) {
+                messageBox.className = "alert alert-success";
+                messageBox.innerHTML = data.message; // Show success message
+                messageBox.classList.remove("d-none");
+
+                // Redirect to login page after 2 seconds
+                setTimeout(() => { window.location.href = "{{ url_for('students.login') }}"; }, 2000);
+            } else {
+                messageBox.className = "alert alert-danger";
+                messageBox.innerHTML = data.message; // Show error message
+                messageBox.classList.remove("d-none");
+            }
+        } catch (error) {
+            messageBox.className = "alert alert-danger";
+            messageBox.innerHTML = "An error occurred. Please try again.";
+            messageBox.classList.remove("d-none");
+        }
+    });
+</script>
 
 {% endblock %}

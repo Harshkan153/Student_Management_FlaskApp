@@ -3,7 +3,7 @@
 {% block content %}
 <h2 class="flex">Update Student</h2>
 
-<form method="POST" action="{{ url_for('students.update_student', s_id=student.s_id) }}">
+<form id="update-student-form">
     <label for="name">Name:</label>
     <input type="text" id="name" name="name" value="{{ student.name }}" required>
     <br><br>
@@ -12,19 +12,48 @@
     <input type="number" id="age" name="age" value="{{ student.age }}" required>
     <br><br>
 
-    <label for="class_name">Class:</label>
-    <select id="class_name" name="class_name">
-        {% for i in range(1, 6) %}
-            <option value="{{ i }}" {% if student.class_name == i|string %}selected{% endif %}>Std {{ i }}</option>
-        {% endfor %}
-    </select>
-    <br><br>
-
     <label for="address">Address:</label>
     <input type="text" id="address" name="address" value="{{ student.address }}" required>
     <br><br>
 
-    <button type="submit">Update</button>
+    <label for="class_name">Class Name:</label>
+    <input type="text" id="class_name" name="class_name" value="{{ student.class_name }}" required>
+    <br><br>
+
+    <button type="submit">Update Student</button>
     <a href="{{ url_for('students.index') }}">Cancel</a>
 </form>
+
+<script>
+    document.getElementById("update-student-form").addEventListener("submit", function (event) {
+        event.preventDefault();  // Prevent default form submission
+
+        const studentId = {{ student.s_id }};  // Get student ID from template
+        const formData = {
+            name: document.getElementById("name").value,
+            age: parseInt(document.getElementById("age").value),
+            address: document.getElementById("address").value,
+            class_name: document.getElementById("class_name").value
+        };
+
+        fetch(`/students/update/${studentId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert("Student updated successfully!");
+                window.location.href = "{{ url_for('students.index') }}";  // Redirect to students list
+            } else {
+                alert("Error updating student: " + data.error);
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    });
+</script>
 {% endblock %}

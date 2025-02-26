@@ -1,4 +1,4 @@
-from flask import abort, flash, jsonify, make_response, request, render_template, redirect, url_for, Blueprint
+from flask import abort, flash, jsonify, make_response, render_template, request, redirect, url_for, Blueprint
 
 from io import BytesIO
 import pandas as pd
@@ -22,111 +22,129 @@ students = Blueprint("students", __name__, template_folder="templates", static_f
 
 @students.route("/signup", methods = ["GET","POST"])
 def signup():
-    if request.method=="GET":
+    if request.method == "GET":
         return render_template("signup.html")
     elif request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        email = request.form.get("email")
-        role = request.form.get("role", "teacher")  # Default role is "teacher"
-        
-          # Check if the email already exists
+        data = request.json
+        username = data.get("username")
+        password = data.get("password")
+        email = data.get("email")
+        role = data.get("role", "teacher")  # Default role is "teacher"
+            
+            # Check if the email already exists
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
-            flash("Email already exists. Please use a different one or login.", "danger")
-            return redirect(url_for("students.signup"))
+            return jsonify({"message": "Email already exists"}), 400
             
-        hashed_password = bcrypt.generate_password_hash(password)
-            
+                
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')        
         user = User(username=username, password=hashed_password,email=email,role=role)
-            
+                
         db.session.add(user)
         db.session.commit()
-        flash("Account created successfully! Please login.", "success")
-        return redirect(url_for("students.login"))
-    return render_template("signup.html")
+
+        return jsonify({"message": "acccount created successfully"}), 201
+
+
+
     
     
     
 @students.route("/login", methods=["GET","POST"])
 def login():
-        if request.method == "GET":
-            return render_template("login.html")
-        elif request.method == "POST":
-            username = request.form.get("username")
-            password = request.form.get("password")
-            
-            user = User.query.filter(User.username == username).first()
-            
-            if user is None:
-                flash("No user registered with this username.", "danger")
-                return redirect(url_for("students.login"))
-            
-            
-            
-            if bcrypt.check_password_hash(user.password, password):
-                login_user(user)
-                flash("Login successful!", "success")
-                return redirect(url_for("students.index"))
-            else:
-                flash("invalid Credentials", "Login failed")
-                return redirect(url_for("students.login"))
+    if request.method == "GET":
         return render_template("login.html")
+    elif request.method == "POST":
+        data = request.json
+        username = data.get("username")
+        password = data.get("password")
+                
+        user = User.query.filter(User.username == username).first()
+        
+        if not user or not bcrypt.check_password_hash(user.password, password):
+            return jsonify({"message": "Invalid username or password"}), 401
+        
+        login_user(user)
+        return jsonify({"message": "Login successful", "user_id": user.uid, "role": user.role})
+            
+        
+      
  
     
     
-@students.route("/logout")
+@students.route("/logout", methods=["POST","GET"])
+@login_required
 def logout():
     logout_user()
-    flash("You have been logged out.", "info")
     return redirect(url_for("students.login"))
+    return jsonify({"message": "Logged out successfully"})
 
 
 
 
-@students.route("/index")
+
+
+
+@students.route("/students", methods=["GET"])
 @login_required
 def index():
     class_name = request.args.get("class")
-    if class_name == "":  # Handle "All" option
-        students = Student.query.all()  # Show all students
-    elif class_name:  # Filter by class if a specific class is selected
-        students = Student.query.filter_by(class_name=class_name).all()
-    else:
-        students = Student.query.all()
-    return render_template("index.html", students = students, class_name=class_name)
+
+    # Explicitly check for AJAX requests
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        if class_name:
+            students = Student.query.filter_by(class_name=class_name).all()
+        else:
+            students = Student.query.all()
+
+        students_json = [
+            {
+                "s_id": student.s_id,
+                "name": student.name,
+                "class_name": student.class_name,
+                "age": student.age
+            }
+            for student in students
+        ]
+        return jsonify(students_json)
+
+    # If it's a normal browser request, return the HTML page
+    students = Student.query.all()
+    return render_template("index.html", students=students)
 
 
-@students.route("/view/<int:s_id>")
-def view_student(s_id):
-    student = Student.query.get_or_404(s_id)  # Retrieve student by ID, or return 404 if not found
-    return render_template("view_student.html", student=student)
 
 
 
-@students.route("/create", methods=["GET","POST"])
+
+
+    
+
+
+
+
+@students.route("/create", methods=["POST","GET"])
+@login_required
 def create():
-    if current_user.is_teacher() or current_user.is_admin():
-        # Allow both admin and teacher to add a student
-        if request.method == "GET":
-            return render_template("add_student.html")
-        elif request.method == "POST":
-            name = request.form.get("name")
-            age = int(request.form.get("age"))
-            address = request.form.get("address")
-            class_name = request.form.get("class_name")
+    if request.method == "GET":
+        return render_template("add_student.html")
+    elif request.method == "POST":
+        data = request.json   
+        name = data.get("name")
+        age = int(data.get("age"))
+        address = data.get("address")
+        class_name = data.get("class_name")
 
-            # Check for duplicate student
-            existing_student = Student.query.filter_by(name=name, class_name=class_name).first()
-            if existing_student:
-                flash('Student already exists in this class.', 'error')
-            else:
-                new_student = Student(name=name, age=age, address=address, class_name=class_name)
-                db.session.add(new_student)
-                db.session.commit()
-                flash('Student added successfully!', 'success')
+        # Check for duplicate student
+        existing_student = Student.query.filter_by(name=name, class_name=class_name).first()
+        if existing_student:
+            return jsonify({"message": "student already exists in the class"}), 400
             
-            return redirect(url_for("students.index"))
+        new_student = Student(name=name, age=age, address=address, class_name=class_name)
+        db.session.add(new_student)
+        db.session.commit()
+        
+        return jsonify({"message": "student added succesfully", "student_id": new_student.s_id})
     
     
     
@@ -134,29 +152,35 @@ def create():
 @login_required
 def update_student(s_id):
     if not current_user.is_admin():
-        abort(403)  # Only Admin can edit students
+        return jsonify({"message": "permission denied"}), 403  # Only Admin can edit students
     student = Student.query.get_or_404(s_id)
-    if request.method == "POST":
-        student.name = request.form["name"]
-        student.age = request.form["age"]
-        student.address = request.form["address"]
-        student.class_name = request.form["class_name"]
+    if request.method == "GET":
+        
+        return render_template("update_student.html", student=student)
+    elif request.method == "POST":      
+        
+        data = request.json
+        student.name = data.get("name", student.name)
+        student.age = data.get("age", student.age)
+        student.address = data.get("address", student.address)
+        student.class_name = data.get("class_name", student.class_name)
         db.session.commit()
-        flash('Student updated successfully!', 'success')
-        return redirect(url_for("students.index"))
-    return render_template("update_student.html", student=student)
+        return jsonify({"message":"student updated successfully"})
 
 
-@students.route("/delete/<int:s_id>")
+@students.route("/students/<int:s_id>", methods=["DELETE"])
 @login_required
 def delete_student(s_id):
     if not current_user.is_admin():
-        abort(403) 
-    student = Student.query.get_or_404(s_id)
+        return jsonify({"message": "permission denied"}), 403  # Only Admin can delete students
+    student = Student.query.get(s_id)
+    if not student:
+        return jsonify({"message": "Student not found"}), 404  # Handle 404 properly
+
     db.session.delete(student)
     db.session.commit()
-    flash('Student deleted successfully.', 'success')
-    return redirect(url_for("students.index"))
+    return jsonify({"message": "Student deleted successfully"}), 200
+
 
 
 @students.route("/export/json")
@@ -279,8 +303,11 @@ def students_count():
 
     # Generate HTML for the chart
     chart_html = pio.to_html(fig, full_html=False)
-
+    
+     # Return the chart embedded in a template
     return render_template("student_count.html", chart_html=chart_html)
+
+    
 
 
 

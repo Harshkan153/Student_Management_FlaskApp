@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for
+from flask import Flask, jsonify, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import Config
@@ -27,6 +27,9 @@ def create_app():
     def load_user(uid):
         return User.query.get(uid)
     
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        return jsonify({"error": "Unauthorized access. You must log in first."}), 401  # Return JSON instead of redirect
 
     
     
