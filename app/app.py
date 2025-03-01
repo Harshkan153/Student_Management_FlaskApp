@@ -34,7 +34,7 @@ def create_app():
     
     
     # students blueprint
-    from app.students.routes import students
+    from app.students.Manage_Students import students
     app.register_blueprint(students, url_prefix='/students')
     
     #users blueprint

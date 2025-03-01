@@ -24,7 +24,7 @@
             <td>{{ user.role }}</td>
             {% if current_user.is_admin() %}
                 <td>
-                    <a href="/users/update/{{ user.uid }}" class="btn btn-success">Edit</a>
+                    <a href="/users/users/update/{{ user.uid }}" class="btn btn-success">Edit</a>
                     <button class="btn btn-danger" onclick="confirmDelete({{ user.uid }})">Delete</button>
                 </td>
             {% endif %}
@@ -35,7 +35,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        fetch("/users/users")
+        fetch("/users/users/update/")
             .then(response => response.json())
             .then(users => {
                 const tableBody = document.getElementById("user-table-body");
@@ -50,7 +50,7 @@
                         <td>${user.role}</td>
                         {% if current_user.is_admin() %}
                             <td>
-                                <a href="/users/update/${user.uid}" class="btn btn-success">Edit</a>
+                                <a href="/users/users/update/${user.uid}" class="btn btn-success">Edit</a>
                                 <button class="btn btn-danger" onclick="confirmDelete(${user.uid})">Delete</button>
                             </td>
                         {% endif %}
@@ -67,7 +67,7 @@
 
     function confirmDelete(userId) {
         if (confirm("Are you sure you want to delete this user?")) {
-            fetch(`/users/users/${userId}`, {
+            fetch(`/users/users/update/${userId}`, {
                 method: "DELETE"
             })
             .then(response => response.json())

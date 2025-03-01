@@ -159,11 +159,19 @@
         }
     }
 
+    let isAdmin = {{ is_admin|tojson }};
+    
     function confirmDelete(studentId) {
+        if (!isAdmin) {
+            alert("Permission denied. Only admins can delete students.");
+            return;
+        }
+
         if (confirm("Are you sure you want to delete this student?")) {
             deleteStudent(studentId);
         }
     }
+    
 </script>
 
 {% endblock %}
